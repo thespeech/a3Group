@@ -81,14 +81,17 @@ function MMOServer() {
         sockets[nextPID] = conn;
     }
 
+	var CheckNewBullets
+
 	var InterestAreaLoop = function() {
 		var i;
 		var j;
 		for(i in ships) {
-			ships[i].moveOneStep(); //Move the ship
+			ships[i].moveOneStep();
 		} //Move every ship one step first.
 		for(i in rockets) {
 			rockets[i].moveOneStep(); //Normal sim code for rockets
+			console.log(rockets[i].lastX);
 			if(rockets[i].x < 0 || rockets[i].x > Config.WIDTH ||
 			   rockets[i].y < 0 || rockets[i].y > Config.HEIGHT) {
 				rockets[i] = null;
@@ -110,6 +113,39 @@ function MMOServer() {
 					}
 				}
 			}
+		}
+		//After all the movement and checking for hits
+		//If ships just intersect their interest zone, update them.
+		for(i in ships) {
+			for(j in ships) {
+				if(((Math.abs(ships[i].x - ships[j].x) < (INTEREST_ZONE+0.3)) &&
+				   (Math.abs(ships[i].x - ships[j].x) >= INTEREST_ZONE)) ||
+				   ((Math.abs(ships[i].y - ships[j].y) < (INTEREST_ZONE+0.3)) &&
+					(Math.abs(ships[i].y - ships[j].y) >= INTEREST_ZONE))) { //If in interest zone and has just crossed interest zone
+						console.log("New ship spawning.");
+				unicast(sockets[i], {type: "new",
+									 id: j,
+									 x: ships[j].x,
+									 y: ships[j].y,
+									 dir: ships[j].dir}); //Send ships just coming into interest zone. new still spawns new ships, but have client remove them when out of range.
+			}
+			}
+			//If rockets intersect the interest zone, update them.
+			for(var k in rockets) {
+				if(((Math.abs(rockets[k].x - ships[i].x) < (INTEREST_ZONE+0.3)) &&
+					(Math.abs(rockets[k].x - ships[i].x) >= INTEREST_ZONE)) ||
+				   ((Math.abs(rockets[k].y - ships[i].y) < (INTEREST_ZONE+0.3)) &&
+					(Math.abs(rockets[k].y - ships[i].y) >= INTEREST_ZONE))){ //If in interest zone and has just crossed interest zone
+						console.log("Rocket fire to send.");
+						unicast(sockets[i], {type:"fire",
+													 ship: rockets[k].from,
+													 rocket: k,
+													 x: rockets[k].x,
+													 y: rockets[k].y,
+													 dir: rockets[k].dir});
+
+				}
+		}
 		}
 	}
 
@@ -216,19 +252,28 @@ function MMOServer() {
 
                             
                             break;
-						//Stopped here for the night. Need to mod turn, fire and add on to gameLoop after moveOneStep to check to put new ships in.
-                        case "turn":
-                            // A player has turned.  Tell everyone else.
+
+					case "turn":
+                            // A player has turned.  Tell everyone else within interest area
                             var pid = players[conn.id].pid;
                             ships[pid].jumpTo(message.x, message.y); //Teleport the ship just in case its out of sync - from client to server
-                            ships[pid].turn(message.dir);
-                            broadcastUnless({
-                                type:"turn",
-                                id: pid,
-                                x: message.x, 
-                                y: message.y, 
-                                dir: message.dir
-                            }, pid);
+                        ships[pid].turn(message.dir);
+						for(var i in ships)
+						{
+							if(i != pid)
+							{
+							if((Math.abs(ships[i].x-message.x)<INTEREST_ZONE) &&
+							   (Math.abs(ships[i].y-message.y)<INTEREST_ZONE)) {
+								unicast(sockets[i], {type: "turn",
+													 id: pid,
+													 x: message.x,
+													 y: message.y,
+													 dir: message.dir
+													}, pid);
+							}
+							}
+						} //Send turn messages only to ships within interest range.
+							
                             break;
 
                         case "fire":
@@ -239,15 +284,19 @@ function MMOServer() {
                             var r = new Rocket();
                             r.init(message.x, message.y, message.dir, pid);
                             var rocketId = new Date().getTime();
-                            rockets[rocketId] = r;
-                            broadcast({
-                                type:"fire",
-                                ship: pid,
-                                rocket: rocketId,
-                                x: message.x,
-                                y: message.y,
-                                dir: message.dir
-                            });
+                        rockets[rocketId] = r;
+						for(var i in ships)
+						{
+							if((Math.abs(ships[i].x-rockets[rocketId].x)<INTEREST_ZONE) &&
+							   (Math.abs(ships[i].y-rockets[rocketId].y)<INTEREST_ZONE)) { //Send fire events only for ships within interest area
+								unicast(sockets[i], {type:"fire",
+													 ship: pid,
+													 rocket: rocketId,
+													 x: message.x,
+													 y: message.y,
+													 dir: message.dir});
+							}
+						}
                             break;
                             
                         default:

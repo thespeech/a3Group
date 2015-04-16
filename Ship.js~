@@ -210,14 +210,6 @@ function Ship()
 			}
 			c.closePath();
 			c.fill();
-			c.beginPath();
-			c.moveTo(rx-200, ry-200);
-			c.lineTo(rx+200, ry-200);
-			c.lineTo(rx+200, ry+200);
-			c.lineTo(rx-200, ry+200);
-			c.lineTo(rx-200, ry-200);
-			c.strokeStyle="white";
-			c.stroke();
 		} catch (e) {
 			console.log(e.message);
 		}
