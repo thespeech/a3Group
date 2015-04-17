@@ -16,11 +16,12 @@ function Rocket()
 	this.dir;  // direction of the rocket
 	this.from; // ship ID of the ship that shoots this rocket
 
-	
-	this.lastX;  // last updated position and time
-	this.lastY;
+	this.realLastX;
+	this.realLastY;
 	//Private
 	var lastUpdateAt;
+	var lastX;
+	var lastY;
 
 	var VELOCITY = 0.05;  // velocity of the rocket in pixels per ms
 
@@ -31,8 +32,8 @@ function Rocket()
 		this.y = yy;
 		this.dir = dd;
 		this.from = from;
-		this.lastX = this.x;
-		this.lastY = this.y;
+		lastX = this.x;
+		lastY = this.y;
 		lastUpdateAt = getTimestamp();
 		if (dd == "up") {
 			this.up();
@@ -58,14 +59,6 @@ function Rocket()
 		return distance;
 	}
 
-	this.returnLastX = function() {
-		return this.lastX;
-	}
-
-	this.returnLastY = function() {
-		return this.lastY;
-	}
-
     /*
      * public methods: moveOneStep
      *
@@ -84,6 +77,12 @@ function Rocket()
 		}
 	}
 
+	this.recordLastXY = function()
+	{
+		this.realLastX = this.x;
+		this.realLastY = this.y;
+	}
+
     /*
      * public methods: up()/down()/left()/right()
      *
@@ -92,32 +91,32 @@ function Rocket()
 	this.up = function()
 	{
 		var distance = calcDistance();
-		this.y = this.lastY - distance; 
-		this.lastY = this.y;
+		this.y = lastY - distance; 
+		lastY = this.y;
 		lastUpdateAt = getTimestamp();
 	}
 
 	this.down = function()
 	{
 		var distance = calcDistance();
-		this.y = this.lastY + distance; 
-		this.lastY = this.y;
+		this.y = lastY + distance; 
+		lastY = this.y;
 		lastUpdateAt = getTimestamp()
 	}
 
 	this.left = function()
 	{
 		var distance = calcDistance();
-		this.x = this.lastX - distance; 
-		this.lastX = this.x;
+		this.x = lastX - distance; 
+		lastX = this.x;
 		lastUpdateAt = getTimestamp();
 	}
 
 	this.right = function()
 	{
 		var distance = calcDistance();
-		this.x = this.lastX + distance; 
-		this.lastX = this.x;
+		this.x = lastX + distance; 
+		lastX = this.x;
 		lastUpdateAt = getTimestamp();
 	}
 	

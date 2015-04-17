@@ -15,6 +15,10 @@ function Ship()
 	this.dir;            // current direction of ship
 	this.hitCount = 0;   // how many times this ship is hit
 	this.killCount = 0;  // how many times this ship hits other
+
+	this.realLastX;
+	this.realLastY;
+	
 	// private:
 	var lastX;           // To remember last position and last update time
 	var lastY;

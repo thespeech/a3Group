@@ -208,8 +208,8 @@ function Client() {
             ships[i].moveOneStep();
 			if(i!==myId)
 			{
-			if((Math.abs(myShip.x - ships[i].x) >= INTEREST_ZONE) ||
-				(Math.abs(myShip.y - ships[i].y) >= INTEREST_ZONE)) { //If left interest zone
+			if((Math.abs(myShip.x - ships[i].x) > INTEREST_ZONE) ||
+				(Math.abs(myShip.y - ships[i].y) > INTEREST_ZONE)) { //If left interest zone
 					delete ships[i]; //Remove ship that hase left interest zone.			
 			}
 			}

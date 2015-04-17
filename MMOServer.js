@@ -85,9 +85,11 @@ function MMOServer() {
 		var i;
 		var j;
 		for(i in ships) {
+			ships[i].recordLastXY();
 			ships[i].moveOneStep();
 		} //Move every ship one step first.
 		for(i in rockets) {
+			rockets[i].recordLastXY();
 			rockets[i].moveOneStep(); //Normal sim code for rockets
 			if(rockets[i].x < 0 || rockets[i].x > Config.WIDTH ||
 			   rockets[i].y < 0 || rockets[i].y > Config.HEIGHT) {
@@ -113,26 +115,31 @@ function MMOServer() {
 		}
 		//After all the movement and checking for hits
 		//If ships just intersect their interest zone, update them.
-		for(i in ships) {
-			for(j in ships) {
-				if(((Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE)&&((Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE) &&
-																		  (Math.abs(ships[i].x - ships[j].x) >= (INTEREST_ZONE-15)))) ||
-				   ((Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE)&&((Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE) &&
-																		  (Math.abs(ships[i].y - ships[j].y) >= (INTEREST_ZONE-15))))) { //If in interest zone and has just crossed interest zone
+
+		for(i in ships) {	
+			for(j in ships) { //Frame rate 40, therefore bullets move at 0.05 per frame. Set 2 frames to avoid problems.
+				if(i!==j)
+				{
+					console.log("Last x distance: ",Math.ceil(Math.abs(ships[i].x - ships[j].realLastX))," Current x distance: ",Math.floor(Math.abs(ships[i].x - ships[j].x)));
+				if(((Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE) &&
+																		  (Math.ceil(Math.abs(ships[i].x - ships[j].realLastX)) >= INTEREST_ZONE))) ||
+				   ((Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE) &&
+																		  (Math.ceil(Math.abs(ships[i].y - ships[j].realLastY)) >= INTEREST_ZONE)))) { //If in interest zone and has just crossed interest zone
 						console.log("New ship spawning.");
 				unicast(sockets[i], {type: "new",
 									 id: j,
 									 x: ships[j].x,
 									 y: ships[j].y,
 									 dir: ships[j].dir}); //Send ships just coming into interest zone. new still spawns new ships, but have client remove them when out of range.
-			}
+				}
+				}
 			}
 			//If rockets intersect the interest zone, update them.
 			for(var k in rockets) {
-				if(((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE) && ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE) &&
-																			  (Math.abs(rockets[k].x - ships[i].x) >= (INTEREST_ZONE-15)))) ||
-				   ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE) && ((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE) &&
-																		  (Math.abs(rockets[k].y - ships[i].y) >= (INTEREST_ZONE-15))))){ //If in interest zone and has just crossed interest zone
+				if(((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE) && ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE+20) &&
+																			  (Math.abs(rockets[k].x - ships[i].x) > INTEREST_ZONE))) ||
+				   ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE) && ((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE+20) &&
+																			  (Math.abs(rockets[k].y - ships[i].y) > INTEREST_ZONE)))){ //If in interest zone and has just crossed interest zone
 						console.log("Rocket fire to send.");
 						unicast(sockets[i], {type:"fire",
 													 ship: rockets[k].from,
@@ -144,6 +151,7 @@ function MMOServer() {
 				}
 		}
 		}
+
 	}
 
 
