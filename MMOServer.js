@@ -115,9 +115,8 @@ function MMOServer() {
 		}
 		//After all the movement and checking for hits
 		//If ships just intersect their interest zone, update them.
-
 		for(i in ships) {	
-			for(j in ships) { //Frame rate 40, therefore bullets move at 0.05 per frame. Set 2 frames to avoid problems.
+			for(j in ships) { 
 				if(i!==j)
 				{
 					console.log("Last x distance: ",Math.ceil(Math.abs(ships[i].x - ships[j].realLastX))," Current x distance: ",Math.floor(Math.abs(ships[i].x - ships[j].x)));
@@ -155,7 +154,7 @@ function MMOServer() {
 													 dir: rockets[k].dir});
 
 				}
-		}
+		  }
 		}
 
 	}
@@ -256,7 +255,7 @@ function MMOServer() {
 													   x: ships[i].x,
 													   y: ships[i].y,
 													   dir: ships[i].dir}); //Signal new guy for ships in interest radius only.
-									   } 
+								} 
 							}
 
 						} 
@@ -265,24 +264,24 @@ function MMOServer() {
                             break;
 
 					case "turn":
-                            // A player has turned.  Tell everyone else within interest area
-                            var pid = players[conn.id].pid;
-                            ships[pid].jumpTo(message.x, message.y); //Teleport the ship just in case its out of sync - from client to server
+                        // A player has turned.  Tell everyone else within interest area
+                        var pid = players[conn.id].pid;
+                        ships[pid].jumpTo(message.x, message.y); //Teleport the ship just in case its out of sync - from client to server
                         ships[pid].turn(message.dir);
 						for(var i in ships)
 						{
 							if(i != pid)
 							{
-							if((Math.abs(ships[i].x-message.x)<INTEREST_ZONE) &&
-							   (Math.abs(ships[i].y-message.y)<INTEREST_ZONE)) {
-								unicast(sockets[i], {type: "turn",
+				                if((Math.abs(ships[i].x-message.x)<INTEREST_ZONE) &&
+                                   (Math.abs(ships[i].y-message.y)<INTEREST_ZONE)) {
+								        unicast(sockets[i], {type: "turn",
 													 id: pid,
 													 x: message.x,
 													 y: message.y,
 													 dir: message.dir
 													}, pid);
-							}
-							}
+							     }
+				            }
 						} //Send turn messages only to ships within interest range.
 							
                             break;

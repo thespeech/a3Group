@@ -162,7 +162,12 @@ function Ship()
 			console.log("ship turn: unrecognize direction " + dd);
 		}
 	}
-
+    
+    /*
+     * public methods: recordLastXY
+     *
+     * Record last X and Y positions of the ship 
+     */
 	this.recordLastXY = function()
 	{
 		this.realLastX = this.x;
