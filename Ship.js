@@ -163,6 +163,12 @@ function Ship()
 		}
 	}
 
+	this.recordLastXY = function()
+	{
+		this.realLastX = this.x;
+		this.realLastY = this.y;
+	}
+
     /*
      * public methods: hit/kill()
      *

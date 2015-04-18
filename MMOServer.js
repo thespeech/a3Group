@@ -121,25 +121,31 @@ function MMOServer() {
 				if(i!==j)
 				{
 					console.log("Last x distance: ",Math.ceil(Math.abs(ships[i].x - ships[j].realLastX))," Current x distance: ",Math.floor(Math.abs(ships[i].x - ships[j].x)));
-				if(((Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE) &&
-																		  (Math.ceil(Math.abs(ships[i].x - ships[j].realLastX)) >= INTEREST_ZONE))) ||
-				   ((Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE) &&
-																		  (Math.ceil(Math.abs(ships[i].y - ships[j].realLastY)) >= INTEREST_ZONE)))) { //If in interest zone and has just crossed interest zone
+					if(((Math.abs(ships[i].y - ships[j].y) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].x - ships[j].x)) < INTEREST_ZONE) &&
+																		  (Math.ceil(Math.abs(ships[i].x - ships[j].realLastX)) >= INTEREST_ZONE)) ||
+						((Math.abs(ships[i].x - ships[j].x) < INTEREST_ZONE)&&(Math.floor(Math.abs(ships[i].y - ships[j].y)) < INTEREST_ZONE) &&
+																		  (Math.ceil(Math.abs(ships[i].y - ships[j].realLastY)) >= INTEREST_ZONE))) { //If in interest zone and has just crossed interest zone
 						console.log("New ship spawning.");
 				unicast(sockets[i], {type: "new",
 									 id: j,
 									 x: ships[j].x,
 									 y: ships[j].y,
 									 dir: ships[j].dir}); //Send ships just coming into interest zone. new still spawns new ships, but have client remove them when out of range.
+						unicast(sockets[j], {type: "new",
+											 id: i,
+											 x: ships[i].x,
+											 y: ships[i].y,
+											 dir: ships[i].dir});
 				}
 				}
 			}
 			//If rockets intersect the interest zone, update them.
 			for(var k in rockets) {
-				if(((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE) && ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE+20) &&
-																			  (Math.abs(rockets[k].x - ships[i].x) > INTEREST_ZONE))) ||
-				   ((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE) && ((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE+20) &&
-																			  (Math.abs(rockets[k].y - ships[i].y) > INTEREST_ZONE)))){ //If in interest zone and has just crossed interest zone
+				console.log("Last x distance: ", Math.ceil(Math.abs(rockets[k].realLastX - ships[i].x))," Current x distance: ",Math.floor(Math.abs(rockets[k].x - ships[i].x)));
+				if(((Math.abs(rockets[k].y - ships[i].y) < INTEREST_ZONE) && (Math.floor(Math.abs(rockets[k].x - ships[i].x)) < INTEREST_ZONE) &&
+																			  (Math.ceil(Math.abs(rockets[k].realLastX - ships[i].x)) >= INTEREST_ZONE)) ||
+					((Math.abs(rockets[k].x - ships[i].x) < INTEREST_ZONE) && (Math.floor(Math.abs(rockets[k].y - ships[i].y)) < INTEREST_ZONE) &&
+					 (Math.ceil(Math.abs(rockets[k].realLastY - ships[i].y)) >= INTEREST_ZONE))){ //If in interest zone and has just crossed interest zone
 						console.log("Rocket fire to send.");
 						unicast(sockets[i], {type:"fire",
 													 ship: rockets[k].from,

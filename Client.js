@@ -65,6 +65,8 @@ function Client() {
                     var id = message.id;
                     if (ships[id] === undefined) {
                         console.log("turn error: undefined ship " + id);
+						ships[id] = new Ship();
+						ships[id].init(message.x, message.y, message.dir);
                     } else {
                         // We do zero-order convergence for simplicity here.
                         ships[id].jumpTo(message.x, message.y);
@@ -85,29 +87,34 @@ function Client() {
                     rockets[rid] = r;
                     break;
                 case "hit":
-                    // Rocket rid just hit Ship rid
+                    // Rocket rid just hit Ship sid
                     var sid = message.ship;
                     var rid = message.rocket;
                     if (ships[sid] === undefined) {
                         console.log("hit error: undefined ship " + sid);
-                    } else {
+                    }
+				if(ships[sid]!==undefined)
+				{
                         // If this client has been hit, increase hit count
                         ships[sid].hit();
                         if (sid == myId) {
                             showMessage("hitCount", myShip.hitCount);
                         }
-                    }
+					//delete rockets[rid];
+                }   
                     if (rockets[rid] === undefined) {
                         console.log("hit error: undefined rocket " + rid);
-                    } else {
-                        // If it is this client's rocket that hits, increase kill count
-                        ships[rockets[rid].from].kill();
-                        if (rockets[rid].from == myId) {
+                    }
+                // If it is this client's rocket that hits, increase kill count
+				if(rockets[rid]!==undefined)
+				{
+                    if (rockets[rid].from == myId) {
+						 ships[rockets[rid].from].kill();
                             showMessage("killCount", myShip.killCount);
                         }
-                        // Remove the rocket
-                        delete rockets[rid];
-                    }
+                    // Remove the rocket
+				}
+                  delete rockets[rid];
                     break;
                 case "delete":
                     // Ship ID has quit. Remove the ship from the battle.
@@ -153,34 +160,46 @@ function Client() {
                 return;
             }
             // We short-circuit turn, but not fire.  
-            if (e.keyCode == 37) { 
+            if (e.keyCode == 37) {
+				if(myShip.dir !== "left")
+				{
                 myShip.turn("left");
                 sendToServer({
                     type:"turn", 
                     x: myShip.x, 
                     y: myShip.y, 
                     dir:"left"});
-            } else if (e.keyCode == 38) { 
+				}
+            } else if (e.keyCode == 38) {
+				if(myShip.dir !== "up")
+				{
                 myShip.turn("up");
                 sendToServer({
                     type:"turn", 
                     x: myShip.x, 
                     y: myShip.y, 
                     dir:"up"});
+				}
             } else if (e.keyCode == 39) {
+				if(myShip.dir !== "right")
+				{
                 myShip.turn("right");
                 sendToServer({
                     type:"turn", 
                     x: myShip.x, 
                     y: myShip.y, 
                     dir:"right"});
+				}
             } else if (e.keyCode == 40) {
+				if(myShip.dir !== "down")
+				{
                 myShip.turn("down");
                 sendToServer({
                     type:"turn", 
                     x: myShip.x, 
                     y: myShip.y, 
                     dir:"down"});
+				}
             } else if (e.keyCode == 32) { // space
                 sendToServer({
                     type:"fire",
@@ -208,9 +227,9 @@ function Client() {
             ships[i].moveOneStep();
 			if(i!==myId)
 			{
-			if((Math.abs(myShip.x - ships[i].x) > INTEREST_ZONE) ||
-				(Math.abs(myShip.y - ships[i].y) > INTEREST_ZONE)) { //If left interest zone
-					delete ships[i]; //Remove ship that hase left interest zone.			
+			if((Math.abs(myShip.x - ships[i].x) >= INTEREST_ZONE) ||
+				(Math.abs(myShip.y - ships[i].y) >= INTEREST_ZONE)) { //If left interest zone
+					delete ships[i]; //Remove ship that has left interest zone.			
 			}
 			}
         }
@@ -222,11 +241,11 @@ function Client() {
                 rockets[i] = null;
                 delete rockets[i];
             }
-				else if((Math.abs(myShip.x - rockets[i].x) >= INTEREST_ZONE) ||
+			/*	else if((Math.abs(myShip.x - rockets[i].x) >= INTEREST_ZONE) ||
 						 (Math.abs(myShip.y - rockets[i].y) >= INTEREST_ZONE)) { //If left interest zone
 						delete rockets[i];
 					console.log("Removing bullet.");
-				}
+				}*/
 
 		}
         render();
